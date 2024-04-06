@@ -56,10 +56,7 @@ def train_model():
     # Evaluation after training
     evaluate_model(model, device, test_loader)
 
-    # Placeholder for LRP application
-    # Note: This step would involve initializing the LRP process and applying it to analyze the model's decision-making.
-    # The LRP process should be integrated based on the model architecture and the specifics of the LRP technique.
-    # lrp_result = apply_lrp(model, some_input_image)
+   
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
