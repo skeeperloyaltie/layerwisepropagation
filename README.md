@@ -47,7 +47,6 @@ This project is open-sourced under the MIT License. See the LICENSE file for mor
 
 ## Contributors
 
-## Contributors
 
 - Your Name - [krishna200416@gmail.com](mailto:krishna200416@gmail.com)
 
