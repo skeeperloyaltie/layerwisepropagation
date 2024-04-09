@@ -52,3 +52,11 @@ This project is open-sourced under the MIT License. See the LICENSE file for mor
 
 
 Feel free to fork this project and contribute!
+
+
+### Updates section 
+
+map <leader>D :put =strftime('# %a %Y-%m-%d %H:%M:%S%z')<CR>
+
+
+In the updated code, we introduced specialized classes, LRPLinear and LRPConv2d, to implement Layer-wise Relevance Propagation (LRP) for linear and convolutional layers, respectively. These classes are designed to replace standard PyTorch layers in the LeNet-5 architecture, enabling it to calculate and propagate relevance scores from the output back through the network, focusing specifically on the last convolutional layer. Each class captures the input during the forward pass for use in the backward pass, where the relevance propagation is customized for the layer type. For linear layers, relevance scores are calculated using a simple redistribution rule based on positive weights, and for convolutional layers, a similar approach is adapted for the convolution operation. This setup allows for an interpretation of the model's decision-making by analyzing the relevance scores of the feature maps produced by the last convolutional layer, providing insights into which features are deemed most important for the model's predictions.

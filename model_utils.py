@@ -7,7 +7,7 @@ class ModelUtils:
         self.model = model.to(device)
         self.device = device
 
-    def train(self, train_loader, epochs=20, lr=0.001):  # Increase epochs here
+    def train(self, train_loader, epochs=1, lr=0.001):  # Increase epochs here
         self.model.train()
         optimizer = optim.Adam(self.model.parameters(), lr=lr)
         criterion = nn.CrossEntropyLoss()

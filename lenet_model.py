@@ -1,28 +1,33 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from lrp import *
 
 class LeNet5(nn.Module):
     def __init__(self):
         super(LeNet5, self).__init__()
-        # First convolutional layer: 1 input channel (grayscale image), 6 output channels, 5x5 kernel
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=0)
-        # Second convolutional layer: 6 input channels, 16 output channels, 5x5 kernel
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1, padding=0)
+        # Convolutional layers
+        self.conv1 = LRPConv2d(1, 6, kernel_size=5, stride=1, padding=0)
+        self.conv2 = LRPConv2d(6, 16, kernel_size=5, stride=1, padding=0)
+        self.last_conv_layer = self.conv2  # Ensure this is your custom LRP layer
+
         # Fully connected layers
-        self.fc1 = nn.Linear(16 * 4 * 4, 120)  # 16*4*4 comes from the dimension reduction after conv and pooling layers
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)  # 10 output classes for MNIST (0-9 digits)
+        self.fc1 = LRPLinear(16 * 4 * 4, 120)
+        self.fc2 = LRPLinear(120, 84)
+        self.fc3 = LRPLinear(84, 10)
+
+        # For LRP: Store the last conv layer's output
+        # self.last_conv_layer = None
 
     def forward(self, x):
-        # Apply first convolution, followed by ReLU non-linearity and 2x2 max pooling
         x = F.max_pool2d(F.relu(self.conv1(x)), 2)
-        # Apply second convolution, followed by ReLU non-linearity and 2x2 max pooling
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-        # Flatten the tensor for the fully connected layer
+        
+        # Store the output for LRP
+        self.last_conv_output = x.detach()
+        
         x = torch.flatten(x, 1)
-        # Apply three fully connected layers with ReLU non-linearity for the first two
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)  # No non-linearity for the output layer
+        x = self.fc3(x)
         return x
