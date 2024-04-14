@@ -23,14 +23,13 @@ class LRPLinear(nn.Module):
         return self.last_input * C
 
 
-    def relprop(self, R):
-        # Assume R is the relevance of the output of this layer, we calculate the relevance of the input
+    def relprop(self, R, epsilon=0.01):
         V = self.weight.clamp(min=0)
-        Z = torch.mm(self.input, V.t()) + self.bias + 1e-9  # Adding bias for stability
+        Z = torch.mm(self.last_input, V.t()) + self.bias + epsilon  # Adding epsilon for stability
         S = R / Z
         C = torch.mm(S, V)
-        R = self.input * C
-        return R
+        return self.last_input * C
+
 
 class LRPConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
