@@ -13,6 +13,56 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
+def visualize_relevance_scores(model, input_data):
+    # Applying LRP and visualizing the relevance scores for each of the 16 feature maps
+    relevance_scores = apply_lrp_to_last_conv_layer(model, input_data)
+    fig, axes = plt.subplots(4, 4, figsize=(12, 12))
+    for i, ax in enumerate(axes.flat):
+        if i < relevance_scores.size(1):
+            heatmap = relevance_scores[0, i].detach().cpu().numpy()
+            im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
+            ax.set_title(f'Feature Map {i+1}')
+            ax.axis('off')
+    plt.colorbar(im, ax=axes.ravel().tolist(), orientation='horizontal')
+    plt.suptitle('Relevance Scores for 16 Feature Maps in the Last Conv Layer')
+    plt.savefig('relevance_scores_feature_maps.png')
+    plt.close()
+    
+import matplotlib.pyplot as plt
+import torch
+
+def aggregate_and_plot_relevance(relevance_scores, filename='aggregated_relevance_scores.png', bar_color='blue'):
+    """
+    Aggregates and plots the relevance scores for each feature map from a convolutional layer.
+
+    Parameters:
+    - relevance_scores (torch.Tensor): A tensor of relevance scores with shape (batch_size, num_feature_maps, height, width).
+    - filename (str): Filename for saving the plot.
+    - bar_color (str): Color of the bars in the plot.
+
+    The function sums the relevance scores across the spatial dimensions of each feature map and plots a bar graph.
+    """
+    if relevance_scores.dim() != 4:
+        raise ValueError("Expected relevance_scores to have 4 dimensions (batch_size, num_feature_maps, height, width)")
+
+    # Sum over spatial dimensions to aggregate relevance scores for each feature map
+    aggregated_scores = relevance_scores.sum(dim=[2, 3])  # [batch_size, num_feature_maps]
+
+    # Ensure using only the first batch for visualization
+    aggregated_scores = aggregated_scores[0].detach().cpu().numpy()  # Convert to numpy array for plotting
+
+    # Creating the bar chart
+    plt.figure(figsize=(10, 6))
+    feature_map_indices = range(1, aggregated_scores.size + 1)
+    plt.bar(feature_map_indices, aggregated_scores, color=bar_color)
+    plt.xlabel('Feature Map')
+    plt.ylabel('Aggregated Relevance Score')
+    plt.title('Aggregated Relevance Scores for Feature Maps')
+    plt.savefig(filename)
+    plt.close()  # Close the figure to free up memory
+    print(f"Plot saved as {filename}")
+
+
 
 
 if __name__ == "__main__":
@@ -82,7 +132,13 @@ if __name__ == "__main__":
     plt.savefig('training_metrics.png')  # Save the figure to a file
     plt.close()  # Close the plot
     
-   
+    
+     # Visualize relevance scores
+    visualize_relevance_scores(model, images)
+
+    # agregated relavance plot
+    aggregate_and_plot_relevance(relevance_scores)
+
 
 
 
