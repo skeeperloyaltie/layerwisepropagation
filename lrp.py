@@ -14,7 +14,9 @@ class LRPLinear(nn.Module):
 
     def forward(self, input):
         self.last_input = input
-        return F.linear(input, self.weight, self.bias)
+        output = F.linear(input, self.weight, self.bias)
+        self.last_output = output  # Capture output for LRP
+        return output
 
     def relprop(self, R):
         Z = torch.mm(self.last_input, torch.clamp(self.weight, min=0).t()) + self.bias + 1e-9
@@ -77,32 +79,20 @@ class LRPConv2d(nn.Module):
 
 
 def apply_lrp_to_last_conv_layer(model, input_data):
-    """
-    Apply LRP to a LeNet5 model instance focusing on the last convolutional layer.
-    
-    Args:
-        model (LeNet5): The model instance, modified for LRP.
-        input_data (Tensor): The input data for which relevance scores are to be computed.
-    
-    Returns:
-        Tensor: The relevance scores for the last convolutional layer's feature maps.
-    """
-    # 1. Perform a forward pass to capture necessary activations and outputs
+    # Complete the forward pass to get outputs.
     output = model(input_data)
-    
-    # 2. Identify the target class (for simplicity, assume the predicted class)
     _, target_class = torch.max(output, dim=1)
-    
-    # 3. Initialize relevance at the output layer (only for the target class)
     R = torch.zeros_like(output)
     R[torch.arange(input_data.shape[0]), target_class] = output[torch.arange(input_data.shape[0]), target_class]
     
-    # 4. Propagate relevance back to the last convolutional layer
-    # Note: This involves calling `relprop` on each subsequent layer starting from the output
-    # until reaching the last convolutional layer. This is a simplified overview and assumes
-    # modifications to LeNet5 and layer definitions to support such operations.
-    
-    # For demonstration purposes, assume we directly access the last convolutional layer's relevance
-    last_conv_relevance = model.last_conv_layer.relprop(R)
-    
-    return last_conv_relevance
+    # Start relevance propagation from the last to the first layer that is necessary for visualization.
+    for layer in reversed(model.get_layers()):
+        R = layer.relprop(R)
+        if isinstance(layer, LRPConv2d):  # Assuming you want to stop at the last convolution layer
+            print("Relevance at last conv layer:", R.shape)
+            break
+
+    return R
+
+
+

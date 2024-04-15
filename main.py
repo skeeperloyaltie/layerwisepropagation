@@ -28,8 +28,7 @@ def visualize_relevance_scores(model, input_data):
     plt.savefig('relevance_scores_feature_maps.png')
     plt.close()
     
-import matplotlib.pyplot as plt
-import torch
+
 
 def aggregate_and_plot_relevance(relevance_scores, filename='aggregated_relevance_scores.png', bar_color='blue'):
     """
@@ -45,12 +44,15 @@ def aggregate_and_plot_relevance(relevance_scores, filename='aggregated_relevanc
     if relevance_scores.dim() != 4:
         raise ValueError("Expected relevance_scores to have 4 dimensions (batch_size, num_feature_maps, height, width)")
 
+    # Verify and display the shape of the relevance scores
+    print("Shape of relevance_scores:", relevance_scores.shape)
+
     # Sum over spatial dimensions to aggregate relevance scores for each feature map
     aggregated_scores = relevance_scores.sum(dim=[2, 3])  # [batch_size, num_feature_maps]
-
+    
     # Ensure using only the first batch for visualization
     aggregated_scores = aggregated_scores[0].detach().cpu().numpy()  # Convert to numpy array for plotting
-
+    
     # Creating the bar chart
     plt.figure(figsize=(10, 6))
     feature_map_indices = range(1, aggregated_scores.size + 1)
@@ -62,6 +64,16 @@ def aggregate_and_plot_relevance(relevance_scores, filename='aggregated_relevanc
     plt.close()  # Close the figure to free up memory
     print(f"Plot saved as {filename}")
 
+# Example usage:
+# Assuming `relevance_scores` is correctly derived from the last convolutional layer output
+# relevance_scores = apply_lrp_to_last_conv_layer(model, input_data)  # Make sure this is correctly implemented
+# aggregate_and_plot_relevance(relevance_scores)
+
+def get_layers(self):
+    """Return a list of layers in the model for relevance propagation."""
+    return [self.conv1, self.conv2, self.fc1, self.fc2, self.fc3]
+
+
 
 
 
@@ -71,7 +83,8 @@ if __name__ == "__main__":
     # Initialize data loader
     data_loader = MNISTDataLoader()
     train_loader, test_loader = data_loader.load_data()
-    
+    # Add this method to your LeNet5 model if not already present.
+    LeNet5.get_layers = get_layers
 
     # Initialize and train model
     model = LeNet5()
@@ -84,9 +97,17 @@ if __name__ == "__main__":
     # Select a subset of data for LRP analysis
     images, _ = next(iter(test_loader))
     images = images.to(device)
+    # input_data = next(iter(test_loader))[0].to(device)  # Get one batch of test data
+
+    print("Output before relevance propagation:", model.last_conv_output.shape)
+    relevance_scores = apply_lrp_to_last_conv_layer(model, images)
+    print("Relevance scores shape:", relevance_scores.shape)
 
     # Apply LRP to analyze the selected subset
     relevance_scores = apply_lrp_to_last_conv_layer(model, images)
+    print("Shape of relevance_scores:", relevance_scores.shape)
+
+    
 
     # Now, `relevance_scores` contains the relevance scores for the last convolutional layer's feature maps
     # You might want to visualize these scores to understand which parts of the input image were most
