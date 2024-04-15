@@ -45,6 +45,7 @@ class LRPConv2d(nn.Module):
         return self.conv(input)
 
     def relprop(self, R):
+        print(f"Input Relevance Shape: {R.shape}")
         # For simplicity, use weight positivity and a simple redistribution rule as an example.
         # This should be adapted based on the specific LRP rules and scenarios.
         weight = torch.clamp(self.conv.weight, min=0)
@@ -77,22 +78,21 @@ class LRPConv2d(nn.Module):
         C = F.conv_transpose2d(S, weight, stride=self.conv.stride, padding=self.conv.padding)
         return self.last_input * C
 
-
 def apply_lrp_to_last_conv_layer(model, input_data):
-    # Complete the forward pass to get outputs.
     output = model(input_data)
     _, target_class = torch.max(output, dim=1)
     R = torch.zeros_like(output)
     R[torch.arange(input_data.shape[0]), target_class] = output[torch.arange(input_data.shape[0]), target_class]
     
-    # Start relevance propagation from the last to the first layer that is necessary for visualization.
+    # Start relevance propagation from the output back to the first relevant layer
     for layer in reversed(model.get_layers()):
         R = layer.relprop(R)
-        if isinstance(layer, LRPConv2d):  # Assuming you want to stop at the last convolution layer
-            print("Relevance at last conv layer:", R.shape)
+        if layer == model.conv2:
+            print(f"Relevance at Conv2 layer: {R.shape}")
             break
-
     return R
+
+
 
 
 

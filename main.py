@@ -13,20 +13,28 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-def visualize_relevance_scores(model, input_data):
-    # Applying LRP and visualizing the relevance scores for each of the 16 feature maps
+def visualize_relevance_scores(model, input_data, filename="relevabce_score.png"):
+    # if relevance_scores.size(1) != 16:
+    #     raise ValueError(f"Expected 16 feature maps, got {relevance_scores.size(1)}")
+    # Apply LRP first to get the relevance scores
     relevance_scores = apply_lrp_to_last_conv_layer(model, input_data)
-    fig, axes = plt.subplots(4, 4, figsize=(12, 12))
-    for i, ax in enumerate(axes.flat):
-        if i < relevance_scores.size(1):
-            heatmap = relevance_scores[0, i].detach().cpu().numpy()
+
+    # Assuming relevance_scores have the correct shape [batch_size, num_filters, height, width]
+    num_filters = relevance_scores.size(1)
+    fig, axs = plt.subplots(nrows=4, ncols=4, figsize=(12, 12))  # Assuming you want to visualize 16 filters
+    for i, ax in enumerate(axs.flat):
+        if i < num_filters:
+            heatmap = relevance_scores[0, i].detach().cpu().numpy()  # Get the first batch's i-th filter
             im = ax.imshow(heatmap, cmap='hot', interpolation='nearest')
             ax.set_title(f'Feature Map {i+1}')
             ax.axis('off')
-    plt.colorbar(im, ax=axes.ravel().tolist(), orientation='horizontal')
+    plt.colorbar(im, ax=axs.ravel().tolist(), orientation='horizontal')
     plt.suptitle('Relevance Scores for 16 Feature Maps in the Last Conv Layer')
-    plt.savefig('relevance_scores_feature_maps.png')
-    plt.close()
+    plt.savefig(filename)
+    plt.close()  # Close the figure to free up memory
+    print(f"Plot saved as {filename}")
+
+
     
 
 
@@ -159,6 +167,37 @@ if __name__ == "__main__":
 
     # agregated relavance plot
     aggregate_and_plot_relevance(relevance_scores)
+    
+    
+    import torch
+    import matplotlib.pyplot as plt
+
+    # Attach a hook
+    activation = {}
+    def get_activation(name):
+        def hook(model, input, output):
+            activation[name] = output.detach()
+        return hook
+
+    # Example of attaching hooks to both convolutional layers
+    model.conv1.register_forward_hook(get_activation('conv1'))
+    model.conv2.register_forward_hook(get_activation('conv2'))
+
+    # Forward pass
+    output = model(images)
+
+    # Accessing the saved activations
+    conv1_feature_maps = activation['conv1']
+    conv2_feature_maps = activation['conv2']
+
+    # Visualizing feature maps of conv1
+    fig, axarr = plt.subplots(min(4, conv1_feature_maps.shape[1]), figsize=(20, 20))
+    for idx in range(min(4, conv1_feature_maps.shape[1])):  # Visualize first 4 feature maps
+        axarr[idx].imshow(conv1_feature_maps[0, idx].cpu().numpy(), cmap='gray')
+        axarr[idx].set_title(f'Feature Map {idx+1}')
+        axarr[idx].axis('off')
+    plt.show()
+
 
 
 
