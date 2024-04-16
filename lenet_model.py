@@ -20,9 +20,9 @@ class LeNet5(nn.Module):
 
     def forward(self, x):
             x = F.max_pool2d(F.relu(self.conv1(x)), 2)
-            print("After conv1:", x.shape)  # Debugging output
+            # print("After conv1:", x.shape)  # Debugging output
             x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-            print("After conv2 (last_conv_layer):", x.shape)  # Critical to check the last conv layer output
+            # print("After conv2 (last_conv_layer):", x.shape)  # Critical to check the last conv layer output
             self.last_conv_output = x.detach()
             # Continue through FC layers
             x = torch.flatten(x, 1)

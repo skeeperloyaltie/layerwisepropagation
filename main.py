@@ -169,39 +169,24 @@ if __name__ == "__main__":
 
     # agregated relavance plot
     aggregate_and_plot_relevance(relevance_scores)
-    
-    
-    import torch
-    import matplotlib.pyplot as plt
+    def list_all_layers(model):
+        for name, module in model.named_modules():
+            print(name, module)
 
-    # Attach a hook
-    activation = {}
-    def get_activation(name):
-        def hook(model, input, output):
-            activation[name] = output.detach()
-        return hook
+    # Assuming 'model' is an instance of LeNet5
+    model = LeNet5()
+    list_all_layers(model)
 
-    # Example of attaching hooks to both convolutional layers
-    model.conv1.register_forward_hook(get_activation('conv1'))
-    model.conv2.register_forward_hook(get_activation('conv2'))
-
-    # Forward pass
-    output = model(images)
-
-    # Accessing the saved activations
-    conv1_feature_maps = activation['conv1']
-    conv2_feature_maps = activation['conv2']
-
-    # Visualizing feature maps of conv1
-    fig, axarr = plt.subplots(min(4, conv1_feature_maps.shape[1]), figsize=(20, 20))
-    for idx in range(min(4, conv1_feature_maps.shape[1])):  # Visualize first 4 feature maps
-        axarr[idx].imshow(conv1_feature_maps[0, idx].cpu().numpy(), cmap='gray')
-        axarr[idx].set_title(f'Feature Map {idx+1}')
-        axarr[idx].axis('off')
-    plt.show()
     
-    
-    
+ # Print the model's architecture
+    print(model)
+
+    # Programmatically check each layer
+    print("\nIterating over each layer in the model:")
+    for name, module in model.named_children():
+        print(f"{name}: {module}")
+        
+        
 
 
 
