@@ -12,6 +12,8 @@ from model_utils import ModelUtils
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+# from utils import manual_convolution
+
 
 def visualize_relevance_scores(model, input_data, filename="relevabce_score.png"):
     # if relevance_scores.size(1) != 16:
@@ -197,8 +199,9 @@ if __name__ == "__main__":
         axarr[idx].set_title(f'Feature Map {idx+1}')
         axarr[idx].axis('off')
     plt.show()
-
-
+    
+    
+    
 
 
 
