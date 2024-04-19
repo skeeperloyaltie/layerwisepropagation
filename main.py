@@ -93,6 +93,30 @@ if __name__ == "__main__":
     # Initialize data loader
     data_loader = MNISTDataLoader()
     train_loader, test_loader = data_loader.load_data()
+    
+    
+    
+    import matplotlib.pyplot as plt
+
+    def visualize_mnist_samples(data_loader):
+        # Get one batch of data
+        images, labels = next(iter(data_loader))
+        images = images.numpy()  # Convert images to numpy arrays for visualization
+
+        fig, axes = plt.subplots(1, 10, figsize=(10, 2))  # Create a row of 10 subplots
+        for idx, ax in enumerate(axes):
+            ax.imshow(images[idx][0], cmap='gray')  # Display the first 10 images
+            ax.set_title(labels[idx].item())
+            ax.axis('off')
+        plt.show()
+
+    # Assuming `data_loader` is defined as an instance of MNISTDataLoader and initialized
+    data_loader_instance = MNISTDataLoader()
+    train_loader, test_loader = data_loader_instance.load_data()
+
+    # Visualize some samples from the training set
+    visualize_mnist_samples(train_loader)
+
     # Add this method to your LeNet5 model if not already present.
     LeNet5.get_layers = get_layers
 

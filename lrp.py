@@ -14,23 +14,23 @@ class LRPLinear(nn.Module):
 
     def forward(self, input):
         self.last_input = input
-        output = F.linear(input, self.weight, self.bias)
+        output = F.linear(input, self.weight, self.bias, )
         self.last_output = output  # Capture output for LRP
         return output
 
-    def relprop(self, R):
-        Z = torch.mm(self.last_input, torch.clamp(self.weight, min=0).t()) + self.bias + 1e-9
+    def relprop(self, R, epsilon=0.01):
+        Z = torch.mm(self.last_input, torch.clamp(self.weight, min=0).t()) + self.bias + 1e-9 + epsilon
         S = R / Z
         C = torch.mm(S, torch.clamp(self.weight, min=0))
         return self.last_input * C
 
 
-    def relprop(self, R, epsilon=0.01):
-        V = self.weight.clamp(min=0)
-        Z = torch.mm(self.last_input, V.t()) + self.bias + epsilon  # Adding epsilon for stability
-        S = R / Z
-        C = torch.mm(S, V)
-        return self.last_input * C
+    # def relprop(self, R, epsilon=0.01):
+    #     V = self.weight.clamp(min=0)
+    #     Z = torch.mm(self.last_input, V.t()) + self.bias + epsilon  # Adding epsilon for stability
+    #     S = R / Z
+    #     C = torch.mm(S, V)
+    #     return self.last_input * C
 
 
 class LRPConv2d(nn.Module):
